@@ -1,0 +1,44 @@
+---
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: elastic-toleration-inject
+  name: elastic-toleration-inject
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: elastic-toleration-inject
+      name: elastic-toleration-inject
+    spec:
+      containers:
+        - name: webhook
+          image: dotjobsuniverse/toleration-webhook:0.0.9
+          ports:
+            - containerPort: 8080
+          env:
+            - name: MATCH_LABEL_KEY
+              value: component
+            - name: MATCH_LABEL_VALUE
+              value: elasticsearch-main-cluster
+            - name: TOLERATION_KEY
+              value: group
+            - name: TOLERATION_VALUE
+              value: elastic
+            - name: TOLERATION_EFFECT
+              value: NoSchedule
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    role: webhook
+  name: webhook
+spec:
+  ports:
+    - port: 443
+      targetPort: 8080
+  selector:
+    app: elastic-toleration-inject
